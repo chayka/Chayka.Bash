@@ -1,0 +1,1 @@
+Powerful bash script to automate some boring tasks on Ubuntu.

@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# web_service='nginx'
-# config_file="/usr/local/etc/le-renew-webroot.ini"
-
 le_path='/opt/letsencrypt'
 exp_limit=30;
 

@@ -46,6 +46,10 @@ SYNTAX_OPTION_SSL_SELF_SIGNED=$(cat <<EOF
 	--ssl-self-signed 	self-signed ssl certificate will be issued
 EOF
 )
+SYNTAX_OPTION_SSL_EMAIL=$(cat <<EOF
+	--ssl-email 	letsencrypt ssl certificate will be issued
+EOF
+)
 SYNTAX_OPTION_SSL_PRIVATE_KEY=$(cat <<EOF
 	--ssl-private-key 	private ssl key issued by authority, will be copied
 				to [HTDOCS]/example.com/certs/example.com.key
@@ -163,6 +167,10 @@ do
 	    --ssl-self-signed)
 	    SSL_SELF_SIGNED=true
 	    ;;
+	    --ssl-email)
+	    SSL_EMAIL="$value"
+	    shift # past argument
+	    ;;
 	    --ssl-private-key)
 	    SSL_PRIVATE_KEY="$value"
 	    shift # past argument
@@ -239,6 +247,7 @@ command_setup_server() {
         git \
         unzip \
         mc \
+        bc \
         nano \
         mcrypt \
         nginx \
@@ -254,7 +263,13 @@ command_setup_server() {
         php5-cli \
         pwgen
 
+    # install letsencrypt to /opt/letsencrypt
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    sudo git clone https://github.com/letsencrypt/letsencrypt /opt/letsencrypt
+
+    # install srdb to /usr/local/lib/Search-Replace-DB
+    git clone https://github.com/interconnectit/Search-Replace-DB.git /usr/local/lib/Search-Replace-DB
+    sudo ln -sf /usr/local/lib/Search-Replace-DB/srdb.cli.php /usr/local/bin/srdb
 }
 
 #
@@ -348,7 +363,8 @@ EOF
 )
 
 #
-#
+# Generate SSL certificate for site
+# TODO: Update it for Let's encrypt flow
 #
 command_generate_ssl() {
 	local domain=$1
@@ -374,7 +390,6 @@ command_generate_ssl() {
 	rm ${domain}.pass.key
 	openssl req -new -config ${domain}.cnf -key ${domain}.self.key -out ${domain}.self.csr \
 		-subj "/OU=IT Department/CN=$domain"
-#  -subj "/C=UK/ST=Warwickshire/L=Leamington/O=OrgName/OU=IT Department/CN=example.com"
 	openssl x509 -req -days 365 -in ${domain}.self.csr -signkey ${domain}.self.key -out ${domain}.self.crt
 }
 
@@ -402,6 +417,9 @@ Examples:
 EOF
 )
 
+#
+# Create database
+#
 command_create_db() {
 	local db_name="$1"
 	db_name=${db_name:-$DB_NAME}
@@ -428,6 +446,99 @@ EOF
 )
 }
 
+SYNTAX_COMMAND_LETSENCRYPT=$(cat <<EOF
+------------------------------------------------------------------------------------------
+No params found, expected syntax:
+	chayka letsencrypt [--ssl-email EMAIL] DOMAIN
+
+EOF
+)
+
+#
+# Obtain letsencrypt certificate, setup auto-renewal
+#
+command_letsencrypt() {
+    # installing prerequisites
+    command -v bc || apt-get update && apt-get -y install bc
+
+    local le_home="/opt/letsencrypt/"
+
+    local domain="$1"
+    local email=${SSL_EMAIL}
+
+    if [ -z ${domain} ]; then
+		echo "$SYNTAX_COMMAND_LETSENCRYPT"
+		exit 0
+    fi
+
+    # install letsencrypt if needed
+    if [ ! -e ${le_home} ]; then
+        echo "Installing letsencrypt..."
+        git clone https://github.com/letsencrypt/letsencrypt ${le_home}
+    else
+        echo "Updating letsencrypt..."
+        cd ${le_home} && git pull
+    fi
+
+    if [ ! -e /etc/letsencrypt/live/${domain}/ ]; then
+        # obtain certificate
+        if [ -z ${email} ]; then
+            echo "email not provided to obtain certificate"
+    		exit 1
+        fi
+        cd ${le_home} && letsencrypt-auto certonly \
+            --non-interactive --text \
+            --agree-tos --email ${email} \
+            --webroot --webroot-path /var/www/${domain}/htdocs \
+            -d ${domain} -d www.${domain}
+    else
+        # update certificate
+        cd ${le_home} && letsencrypt-auto certonly \
+            --agree-tos --renew-by-default \
+            -a webroot --webroot-path=/var/www/${domain}/htdocs \
+            -d ${domain} -d www.${domain}
+    fi
+
+    # create cron job if absent to update certificates that are expiring soon
+    local cronfile = "/etc/cron.d/letsencrypt.renew.$domain"
+    if [ ! -e ${cronfile} ]; then
+        echo "30 2 * * 1 letsencrypt-renew $domain >> /var/log/letsencrypt.renew.$domain.log 2>&1" > ${cronfile}
+    fi
+}
+
+SYNTAX_COMMAND_ADD_SSL=$(cat <<EOF
+------------------------------------------------------------------------------------------
+No params found, expected syntax:
+	chayka add-ssl [--ssl-email EMAIL] DOMAIN
+
+EOF
+)
+
+#
+# Obtain letsencrypt certificate, setup auto-renewal
+#
+command_add_ssl() {
+    local domain="$1"
+    local email=${SSL_EMAIL}
+
+    if [ -z ${domain} ]; then
+		echo "$SYNTAX_COMMAND_ADD_SSL"
+		exit 0
+    fi
+
+    # create nginx config
+    if [ ! -e /etc/nginx/sites-available/https.${domain} ]; then
+        sed -e "s/example.com/$domain/g" -e "s|/var/www|$HTDOCS_DIR|" /etc/nginx/chayka/https.example.com.conf > /etc/nginx/sites-available/https.${domain}
+    fi
+
+    command_letsencrypt ${domain}
+
+    rm /etc/nginx/sites-enabled/${domain}
+    ln -s /etc/nginx/sites-available/https.${domain} /etc/nginx/sites-enabled/${domain}
+
+	nginx -t && nginx -s reload
+}
+
 SYNTAX_COMMAND_ADD_SITE=$(cat <<EOF
 ------------------------------------------------------------------------------------------
 No params found, expected syntax:
@@ -439,6 +550,8 @@ ${SYNTAX_OPTION_HTDOCS}
 ${SYNTAX_OPTION_USER}
 
 ${SYNTAX_OPTION_PASS}
+
+${SYNTAX_OPTION_SSL_EMAIL}
 
 ${SYNTAX_OPTION_SSL_PRIVATE_KEY}
 
@@ -474,6 +587,11 @@ Examples:
 EOF
 )
 
+#
+# Add site:
+#   - create nginx config
+#   - create site folder
+#
 command_add_site() {
 	local domain=$1
 	if [ -z ${domain} ]; then
@@ -528,19 +646,32 @@ command_add_site() {
 
 	# test nginx config and reload
 	nginx -t && nginx -s reload
+
+	if [ ${SSL_EMAIL} ]; then
+	    command_add_ssl ${domain}
+	fi
 }
 
+#
+# Uncomment PhpMyAdmin config options
+#
 pma_uncomment() {
 	local key="$1"
 	sed -ri "s/\/\/\s*\\\$cfg\['Servers'\]\[\\\$i\]\['$key'\]/\$cfg['Servers'][\$i]['$key']/" "$PMA_DIR/config.inc.php"
 }
 
+#
+# Set PhpMyAdmin config options
+#
 pma_set_config() {
 	local key="$1"
 	local value="$2"
 	sed -ri "s/\['$key']\s*=\s*'[^']*'/['$key'] = '$value'/" "$PMA_DIR/config.inc.php"
 }
 
+#
+# Install PhpMyAdmin on server
+#
 command_install_pma() {
 
 	if [ ! -d ${PMA_DIR} ]; then
@@ -597,21 +728,38 @@ command_install_pma() {
 
 }
 
+#
+# Generate db name based on domain name
+#
 wp_db_name() {
 	local domain=$1
 	php -r 'echo preg_replace("/[^\w\d_]+/", "_", basename($argv[1]));' "$domain"
 }
 
+#
+# Escape values for wp-config.php
+#
 wp_escape_lhs() {
 	echo "$@" | sed 's/[]\/$*.^|[]/\\&/g'
 }
+
+#
+# Escape values for wp-config.php
+#
 wp_escape_rhs() {
 	echo "$@" | sed 's/[\/&]/\\&/g'
 }
 
+#
+# Escape values for wp-config.php
+#
 wp_escape() {
 	php -r 'var_export((string) $argv[1]);' "$1"
 }
+
+#
+# Set WP config options
+#
 wp_set_config() {
 	key="$1"
 	value="$2"
@@ -646,18 +794,24 @@ ${SYNTAX_OPTION_DB_PASS}
 
 ${SYNTAX_OPTION_DB_ROOT_PASS}
 
+${SYNTAX_OPTION_SSL_EMAIL}
+
 Examples:
 	chayka install-wp example.com
 	chayka install-wp \\
 	    --wp-url https://ru.wordpress.org/wordpress-4.3.1-ru_RU.zip \\
 	    --wp-email admin@example.com \\
 	    --wp-pass SecretPassw0rd \\
+	    --ssl-email admin@example.com \\
 	    example.com auth-wpp comments-wpp search-wpp
 
 ------------------------------------------------------------------------------------------
 EOF
 )
 
+#
+# Install WordPress
+#
 command_install_wp () {
 	local domain=$1
 	local db_pass=${DB_PASS:-$(pwgen -cn 16 1)}
@@ -712,6 +866,12 @@ command_install_wp () {
         fi
 	done
 
+    local scheme="http"
+
+	if [ ${SSL_EMAIL} ]; then
+	    scheme="https"
+	fi
+
 	if [ ! -z ${WP_EMAIL} ] && [ ! -z ${WP_PASS} ]; then
 		curl --data-urlencode "weblog_title=$domain" \
 			--data-urlencode "user_name=$WP_ADMIN" \
@@ -721,8 +881,8 @@ command_install_wp () {
 			--data-urlencode "admin_email=$WP_EMAIL" \
 			--data-urlencode "blog_public=1" \
 			--data-urlencode "Submit=Install+WordPress" \
-			"http://$domain/wp-admin/install.php?step=2" >> /dev/null
-        echo "http://$domain/wp-admin/install.php?step=2 called"
+			"$scheme://$domain/wp-admin/install.php?step=2" >> /dev/null
+        echo "$scheme://$domain/wp-admin/install.php?step=2 called"
 	fi
 
     shift
@@ -742,7 +902,9 @@ command_install_wp () {
     fi
 }
 
-
+#
+# Launch requested command
+#
 case ${COMMAND} in
     setup-server)
         command_setup_server
@@ -755,6 +917,7 @@ case ${COMMAND} in
     disable-site)
     ;;
     add-ssl)
+        command_add_ssl ${PARAM}
     ;;
     remove-ssl)
     ;;
@@ -776,6 +939,9 @@ case ${COMMAND} in
     ;;
     generate-ssl)
 		command_generate_ssl ${PARAM}
+	;;
+    letsencrypt)
+		command_letsencrypt ${PARAM}
 	;;
     *)
     ;;

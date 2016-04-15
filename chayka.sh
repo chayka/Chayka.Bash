@@ -480,6 +480,11 @@ command_letsencrypt() {
         cd ${le_home} && git pull
     fi
 
+    # create a folder that webroot plugin will use
+    if [ ! -e /var/www/${domain}/htdocs/.well-known/ ]; then
+        mkdir /var/www/${domain}/htdocs/.well-known/
+    fi
+
     if [ ! -e /etc/letsencrypt/live/${domain}/ ]; then
         # obtain certificate
         if [ -z ${email} ]; then

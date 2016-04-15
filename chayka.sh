@@ -486,21 +486,21 @@ command_letsencrypt() {
             echo "email not provided to obtain certificate"
     		exit 1
         fi
-        cd ${le_home} && letsencrypt-auto certonly \
+        ${le_home}letsencrypt-auto certonly \
             --non-interactive --text \
             --agree-tos --email ${email} \
             --webroot --webroot-path /var/www/${domain}/htdocs \
             -d ${domain} -d www.${domain}
     else
         # update certificate
-        cd ${le_home} && letsencrypt-auto certonly \
+        ${le_home}letsencrypt-auto certonly \
             --agree-tos --renew-by-default \
             -a webroot --webroot-path=/var/www/${domain}/htdocs \
             -d ${domain} -d www.${domain}
     fi
 
     # create cron job if absent to update certificates that are expiring soon
-    local cronfile = "/etc/cron.d/letsencrypt.renew.$domain"
+    local cronfile="/etc/cron.d/letsencrypt.renew.$domain"
     if [ ! -e ${cronfile} ]; then
         echo "30 2 * * 1 letsencrypt-renew $domain >> /var/log/letsencrypt.renew.$domain.log 2>&1" > ${cronfile}
     fi

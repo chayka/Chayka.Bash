@@ -483,6 +483,7 @@ command_letsencrypt() {
     # create a folder that webroot plugin will use
     if [ ! -e /var/www/${domain}/htdocs/.well-known/ ]; then
         mkdir /var/www/${domain}/htdocs/.well-known/
+        chown www-data:www-data /var/www/${domain}/htdocs/.well-known/
     fi
 
     if [ ! -e /etc/letsencrypt/live/${domain}/ ]; then

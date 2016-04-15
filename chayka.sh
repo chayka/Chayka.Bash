@@ -486,24 +486,21 @@ command_letsencrypt() {
         chown www-data:www-data /var/www/${domain}/htdocs/.well-known/
     fi
 
+    local leCommand=''
+
     if [ ! -e /etc/letsencrypt/live/${domain}/ ]; then
         # obtain certificate
         if [ -z ${email} ]; then
             echo "email not provided to obtain certificate"
     		exit 1
         fi
-        ${le_home}letsencrypt-auto certonly \
-            --non-interactive --text \
-            --agree-tos --email ${email} \
-            --webroot --webroot-path /var/www/${domain}/htdocs \
-            -d ${domain} -d www.${domain}
+        leCommand="${le_home}letsencrypt-auto certonly --non-interactive --text --agree-tos --email ${email} --webroot --webroot-path /var/www/${domain}/htdocs -d ${domain}"
     else
         # update certificate
-        ${le_home}letsencrypt-auto certonly \
-            --agree-tos --renew-by-default \
-            -a webroot --webroot-path=/var/www/${domain}/htdocs \
-            -d ${domain} -d www.${domain}
+        leCommand="${le_home}letsencrypt-auto certonly --agree-tos --renew-by-default -a webroot --webroot-path=/var/www/${domain}/htdocs -d ${domain}"
     fi
+
+    nslookup www.${domain} && ${leCommand} -d www.${domain} || ${leCommand}
 
     # create cron job if absent to update certificates that are expiring soon
     local cronfile="/etc/cron.d/letsencrypt.renew.$domain"

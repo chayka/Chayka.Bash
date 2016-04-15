@@ -41,7 +41,8 @@ if [ "$days_exp" -gt "$exp_limit" ] ; then
 else
 	echo "The certificate for $domain is about to expire soon. Starting webroot renewal script..."
         # $le_path/letsencrypt-auto certonly -a webroot --agree-tos --renew-by-default --config $config_file
-	/opt/letsencrypt/letsencrypt-auto certonly -a webroot --agree-tos --renew-by-default --webroot-path=${site_root} -d ${domain} -d www.${domain}
+	updateCommand="/opt/letsencrypt/letsencrypt-auto certonly -a webroot --agree-tos --renew-by-default --webroot-path=${site_root} -d ${domain}"
+	nslookup www.${domain} && ${updateCommand} -d www.${domain} || ${updateCommand}
 	echo "Reloading nginx"
 	service nginx reload
 	echo "Renewal process finished for domain $domain"

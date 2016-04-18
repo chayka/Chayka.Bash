@@ -35,7 +35,7 @@ fi
 #
 if [ -z ${CHAYKA_BASH_HOME} ]; then
     export CHAYKA_BASH_HOME=${cwd}
-    echo "export MYSQL_ROOT_PASSWORD=$cwd" >> ~/.bashrc
+    echo "export CHAYKA_BASH_HOME=$cwd" >> ~/.bashrc
 fi
 
 #

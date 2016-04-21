@@ -861,7 +861,7 @@ command_install_wp () {
 		LOGGED_IN_SALT
 		NONCE_SALT
 	)
-	for unique in "${uniques[@]}"; do
+	for unique in ${uniques}[@]; do
         # if not specified, let's generate a random value
         current_set="$(sed -rn "s/define\((([\'\"])$unique\2\s*,\s*)(['\"])(.*)\3\);/\4/p" wp-config.php)"
         if [ "$current_set" = 'put your unique phrase here' ]; then

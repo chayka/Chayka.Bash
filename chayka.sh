@@ -15,6 +15,7 @@ COMMAND:
 	get-composer 	install composer - php package manager 
 	install-pma 	install phpMyAdmin
 	install-wp 	add wordpress installation to the specified site
+	install-wp-tests    add test suite to existing wp instance
 	install-wpp 	install registered chayka wpp plugins from packagist.org to WP
 	create-db 	create database with privileged user
 	run-sql-script 	run sql script
@@ -236,6 +237,18 @@ do
 	esac
 	shift # past argument or value
 done
+
+
+#
+# download $1 and save it to $2
+#
+download() {
+    if [ `which curl` ]; then
+        curl -s "$1" > "$2";
+    elif [ `which wget` ]; then
+        wget -nv -O "$2" "$1"
+    fi
+}
 
 #
 # sets up php environment on server
@@ -906,6 +919,101 @@ command_install_wp () {
 }
 
 #
+# fetch wp-config.php param
+#
+wp_get_config_param(){
+    local wp_config=${1-./wp-config.php}
+    local param=$2
+    cat ${wp_config} | grep ${param} | sed "s/define('${param}',\s*'\([^']*\)');/\1/"
+}
+
+SYNTAX_COMMAND_INSTALL_WP_TESTS=$(cat <<EOF
+------------------------------------------------------------------------------------------
+No params found, expected syntax:
+	chayka install-wp-tests DOMAIN
+
+Examples:
+	chayka install-wp-tests example.com
+
+------------------------------------------------------------------------------------------
+EOF
+)
+
+#
+# Install WP test suite libs.
+# Will reuse DB credentials from wp-config.php
+# Warning: running tests may reset DB, so don't do it on production WP instance
+#
+command_install_wp_test_suite() {
+	local domain=$1
+
+    if [ -z ${domain} ]; then
+        echo "$SYNTAX_COMMAND_INSTALL_WP_TESTS"
+        exit 0
+    fi
+
+    local WP_DIR=/var/www/${domain}/htdocs/
+    local WP_TESTS_DIR=${WP_DIR}wp-content/tests-lib/
+
+    local DB_HOST=$(wp_get_config_param ${WP_DIR}wp-config.php DB_HOST)
+    local DB_NAME=$(wp_get_config_param ${WP_DIR}wp-config.php DB_NAME)
+    local DB_USER=$(wp_get_config_param ${WP_DIR}wp-config.php DB_USER)
+    local DB_PASS=$(wp_get_config_param ${WP_DIR}wp-config.php DB_PASSWORD)
+    #
+	# portable in-place argument for both GNU sed and Mac OSX sed
+	#
+	if [ $(uname -s) == 'Darwin' ]; then
+		local ioption='-i .bak'
+	else
+		local ioption='-i'
+	fi
+
+	#
+	# Acquiring actual WP version to get correct test suite
+	#
+    local WP_VERSION=$(cat ${WP_DIR}readme.html | grep Version | sed "s/^\s*<br\s*\/>\s*Version\s*//")
+    local WP_TESTS_TAG="tags/$WP_VERSION"
+
+    #
+	# set up testing suite if it doesn't yet exist
+	#
+	if [ ! -d ${WP_TESTS_DIR} ]; then
+	    #
+		# set up testing suite
+		#
+		mkdir -p ${WP_TESTS_DIR}
+
+		#
+		# check out from svn repository wp testing suite
+		#
+		svn co --quiet https://develop.svn.wordpress.org/${WP_TESTS_TAG}/tests/phpunit/includes/ $WP_TESTS_DIR/includes
+	fi
+
+    #
+    # Creating alternative bootstrap, that does not flush database
+    # and does not check for WordPress specific test groups
+    #
+	if [ ! -d ${WP_TESTS_DIR}/includes/bootstrap.chayka.php ]; then
+	    cp ${WP_TESTS_DIR}/includes/bootstrap.php ${WP_TESTS_DIR}/includes/bootstrap.chayka.php
+		sed ${sed_option} "s:system:'//system':" ${WP_TESTS_DIR}/wp-tests-config.php
+		sed ${sed_option} "s:_delete_all_posts:'//_delete_all_posts':" ${WP_TESTS_DIR}/wp-tests-config.php
+		sed ${sed_option} "s:new WP_PHPUnit_Util_Getopt:'//new WP_PHPUnit_Util_Getopt':" ${WP_TESTS_DIR}/wp-tests-config.php
+    fi
+
+    #
+    # setup wp-tests-config.php with db credentials
+    #
+	if [ ! -f wp-tests-config.php ]; then
+		download https://develop.svn.wordpress.org/${WP_TESTS_TAG}/wp-tests-config-sample.php "$WP_TESTS_DIR"/wp-tests-config.php
+		sed $ioption "s:dirname( __FILE__ ) . '/src/':'${WP_DIR}':" ${WP_TESTS_DIR}/wp-tests-config.php
+		sed $ioption "s:youremptytestdbnamehere:${DB_NAME}:" ${WP_TESTS_DIR}/wp-tests-config.php
+		sed $ioption "s:yourusernamehere:${DB_USER}:" ${WP_TESTS_DIR}/wp-tests-config.php
+		sed $ioption "s:yourpasswordhere:${DB_PASS}:" ${WP_TESTS_DIR}/wp-tests-config.php
+		sed $ioption "s:localhost:${DB_HOST}:" ${WP_TESTS_DIR}/wp-tests-config.php
+	fi
+}
+
+#
 # Launch requested command
 #
 case ${COMMAND} in
@@ -932,6 +1040,9 @@ case ${COMMAND} in
     ;;
     install-wp)
 		command_install_wp $@
+    ;;
+    install-wp-tests)
+		command_install_wp_test_suite ${PARAM}
     ;;
     install-wpp)
     ;;

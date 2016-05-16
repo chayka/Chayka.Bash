@@ -988,30 +988,30 @@ command_install_wp_test_suite() {
 		#
 		# check out from svn repository wp testing suite
 		#
-		svn co --quiet https://develop.svn.wordpress.org/${WP_TESTS_TAG}/tests/phpunit/includes/ $WP_TESTS_DIR/includes
+		svn co --quiet https://develop.svn.wordpress.org/${WP_TESTS_TAG}/tests/phpunit/includes/ ${WP_TESTS_DIR}includes
 	fi
 
     #
     # Creating alternative bootstrap, that does not flush database
     # and does not check for WordPress specific test groups
     #
-	if [ ! -d ${WP_TESTS_DIR}/includes/bootstrap.chayka.php ]; then
-	    cp ${WP_TESTS_DIR}/includes/bootstrap.php ${WP_TESTS_DIR}/includes/bootstrap.chayka.php
-		sed ${sed_option} "s:system:'//system':" ${WP_TESTS_DIR}/wp-tests-config.php
-		sed ${sed_option} "s:_delete_all_posts:'//_delete_all_posts':" ${WP_TESTS_DIR}/wp-tests-config.php
-		sed ${sed_option} "s:new WP_PHPUnit_Util_Getopt:'//new WP_PHPUnit_Util_Getopt':" ${WP_TESTS_DIR}/wp-tests-config.php
+	if [ ! -d ${WP_TESTS_DIR}includes/bootstrap.chayka.php ]; then
+	    cp ${WP_TESTS_DIR}includes/bootstrap.php ${WP_TESTS_DIR}includes/bootstrap.chayka.php
+		sed ${sed_option} "s:system:'//system':" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sed_option} "s:_delete_all_posts:'//_delete_all_posts':" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sed_option} "s:new WP_PHPUnit_Util_Getopt:'//new WP_PHPUnit_Util_Getopt':" ${WP_TESTS_DIR}wp-tests-config.php
     fi
 
     #
     # setup wp-tests-config.php with db credentials
     #
 	if [ ! -f wp-tests-config.php ]; then
-		download https://develop.svn.wordpress.org/${WP_TESTS_TAG}/wp-tests-config-sample.php "$WP_TESTS_DIR"/wp-tests-config.php
-		sed $ioption "s:dirname( __FILE__ ) . '/src/':'${WP_DIR}':" ${WP_TESTS_DIR}/wp-tests-config.php
-		sed $ioption "s:youremptytestdbnamehere:${DB_NAME}:" ${WP_TESTS_DIR}/wp-tests-config.php
-		sed $ioption "s:yourusernamehere:${DB_USER}:" ${WP_TESTS_DIR}/wp-tests-config.php
-		sed $ioption "s:yourpasswordhere:${DB_PASS}:" ${WP_TESTS_DIR}/wp-tests-config.php
-		sed $ioption "s:localhost:${DB_HOST}:" ${WP_TESTS_DIR}/wp-tests-config.php
+		download https://develop.svn.wordpress.org/${WP_TESTS_TAG}/wp-tests-config-sample.php ${WP_TESTS_DIR}wp-tests-config.php
+		sed $ioption "s:dirname( __FILE__ ) . '/src/':'${WP_DIR}':" ${WP_TESTS_DIR}wp-tests-config.php
+		sed $ioption "s:youremptytestdbnamehere:${DB_NAME}:" ${WP_TESTS_DIR}wp-tests-config.php
+		sed $ioption "s:yourusernamehere:${DB_USER}:" ${WP_TESTS_DIR}wp-tests-config.php
+		sed $ioption "s:yourpasswordhere:${DB_PASS}:" ${WP_TESTS_DIR}wp-tests-config.php
+		sed $ioption "s:localhost:${DB_HOST}:" ${WP_TESTS_DIR}wp-tests-config.php
 	fi
 }
 

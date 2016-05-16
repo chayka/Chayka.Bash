@@ -961,14 +961,6 @@ command_install_wp_test_suite() {
     local DB_NAME=$(wp_get_config_param ${WP_DIR}wp-config.php DB_NAME)
     local DB_USER=$(wp_get_config_param ${WP_DIR}wp-config.php DB_USER)
     local DB_PASS=$(wp_get_config_param ${WP_DIR}wp-config.php DB_PASSWORD)
-    #
-	# portable in-place argument for both GNU sed and Mac OSX sed
-	#
-	if [ $(uname -s) == 'Darwin' ]; then
-		local ioption='-i .bak'
-	else
-		local ioption='-i'
-	fi
 
 	#
 	# Acquiring actual WP version to get correct test suite
@@ -992,14 +984,22 @@ command_install_wp_test_suite() {
 	fi
 
     #
+	# portable in-place argument for both GNU sed and Mac OSX sed
+	#
+    local sedOption='-i'
+	if [ $(uname -s) == 'Darwin' ]; then
+		sedOption='-i .bak'
+	fi
+
+    #
     # Creating alternative bootstrap, that does not flush database
     # and does not check for WordPress specific test groups
     #
 	if [ ! -d ${WP_TESTS_DIR}includes/bootstrap.chayka.php ]; then
 	    cp ${WP_TESTS_DIR}includes/bootstrap.php ${WP_TESTS_DIR}includes/bootstrap.chayka.php
-		sed ${sed_option} "s:system:'//system':" ${WP_TESTS_DIR}wp-tests-config.php
-		sed ${sed_option} "s:_delete_all_posts:'//_delete_all_posts':" ${WP_TESTS_DIR}wp-tests-config.php
-		sed ${sed_option} "s:new WP_PHPUnit_Util_Getopt:'//new WP_PHPUnit_Util_Getopt':" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sedOption} "s:system:'//system':" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sedOption} "s:_delete_all_posts:'//_delete_all_posts':" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sedOption} "s:new WP_PHPUnit_Util_Getopt:'//new WP_PHPUnit_Util_Getopt':" ${WP_TESTS_DIR}wp-tests-config.php
     fi
 
     #
@@ -1007,11 +1007,11 @@ command_install_wp_test_suite() {
     #
 	if [ ! -f wp-tests-config.php ]; then
 		download https://develop.svn.wordpress.org/${WP_TESTS_TAG}/wp-tests-config-sample.php ${WP_TESTS_DIR}wp-tests-config.php
-		sed $ioption "s:dirname( __FILE__ ) . '/src/':'${WP_DIR}':" ${WP_TESTS_DIR}wp-tests-config.php
-		sed $ioption "s:youremptytestdbnamehere:${DB_NAME}:" ${WP_TESTS_DIR}wp-tests-config.php
-		sed $ioption "s:yourusernamehere:${DB_USER}:" ${WP_TESTS_DIR}wp-tests-config.php
-		sed $ioption "s:yourpasswordhere:${DB_PASS}:" ${WP_TESTS_DIR}wp-tests-config.php
-		sed $ioption "s:localhost:${DB_HOST}:" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sedOption} "s:dirname( __FILE__ ) . '/src/':'${WP_DIR}':" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sedOption} "s:youremptytestdbnamehere:${DB_NAME}:" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sedOption} "s:yourusernamehere:${DB_USER}:" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sedOption} "s:yourpasswordhere:${DB_PASS}:" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sedOption} "s:localhost:${DB_HOST}:" ${WP_TESTS_DIR}wp-tests-config.php
 	fi
 }
 

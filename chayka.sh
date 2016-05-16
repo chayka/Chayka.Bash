@@ -905,12 +905,12 @@ command_install_wp () {
 
     shift
 
-    if [ $# > 0 ]; then
+    if [ $# gt 0 ]; then
 		cd ./wp-content/plugins
 		git clone https://github.com/chayka/Chayka.Core.wpp.git
 		cd ./Chayka.Core.wpp
 		composer install
-		while [[ $# > 0 ]]
+		while [[ $# gt 0 ]]
 		do
 			local plugin="$1"
 			composer require "chayka/$plugin"

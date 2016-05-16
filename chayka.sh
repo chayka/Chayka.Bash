@@ -439,6 +439,7 @@ command_create_db() {
 	local db_user="$2"
 	db_user=${db_user:-$DB_USER}
 	db_user=${db_user:-$db_name}
+	db_user=${db_user:0:16}
 	local db_pass="$3"
 	db_pass=${db_pass:-$(pwgen -cn 16 1)}
 	if [ ! ${db_name} ]; then
@@ -832,7 +833,7 @@ command_install_wp () {
 	local domain=$1
 	local db_pass=${DB_PASS:-$(pwgen -cn 16 1)}
 	local db_name=${DB_NAME:-$(wp_db_name $domain)}
-	local db_user=${DB_USER:-$db_name}
+	local db_user=${DB_USER:-$db_name:0:16}
 	local db_host=${DB_HOST:-'localhost'}
 
     if [ -z ${domain} ]; then

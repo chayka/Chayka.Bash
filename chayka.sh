@@ -961,6 +961,7 @@ command_install_wp_test_suite() {
     local DB_NAME=$(wp_get_config_param ${WP_DIR}wp-config.php DB_NAME | sed "s/[\r\n]*$//")
     local DB_USER=$(wp_get_config_param ${WP_DIR}wp-config.php DB_USER | sed "s/[\r\n]*$//")
     local DB_PASS=$(wp_get_config_param ${WP_DIR}wp-config.php DB_PASSWORD | sed "s/[\r\n]*$//")
+    local DB_PREFIX=$(cat ${WP_DIR}wp-config.php | grep table_prefix | sed "s/\$table_prefix\s*=\s*'\([^']*\)';/\1/" | sed "s/[\r\n]*$//")
 
 	#
 	# Acquiring actual WP version to get correct test suite
@@ -1012,6 +1013,7 @@ command_install_wp_test_suite() {
 		sed ${sedOption} "s:yourusernamehere:${DB_USER}:" ${WP_TESTS_DIR}wp-tests-config.php
 		sed ${sedOption} "s:yourpasswordhere:${DB_PASS}:" ${WP_TESTS_DIR}wp-tests-config.php
 		sed ${sedOption} "s:localhost:${DB_HOST}:" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sedOption} "s:wptests_:${DB_PREFIX}:" ${WP_TESTS_DIR}wp-tests-config.php
 	fi
 }
 

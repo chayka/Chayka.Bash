@@ -957,10 +957,10 @@ command_install_wp_test_suite() {
     local WP_DIR=/var/www/${domain}/htdocs/
     local WP_TESTS_DIR=${WP_DIR}wp-content/tests-lib/
 
-    local DB_HOST=$(wp_get_config_param ${WP_DIR}wp-config.php DB_HOST)
-    local DB_NAME=$(wp_get_config_param ${WP_DIR}wp-config.php DB_NAME)
-    local DB_USER=$(wp_get_config_param ${WP_DIR}wp-config.php DB_USER)
-    local DB_PASS=$(wp_get_config_param ${WP_DIR}wp-config.php DB_PASSWORD)
+    local DB_HOST=$(wp_get_config_param ${WP_DIR}wp-config.php DB_HOST | sed "s/[\r\n]*$//")
+    local DB_NAME=$(wp_get_config_param ${WP_DIR}wp-config.php DB_NAME | sed "s/[\r\n]*$//")
+    local DB_USER=$(wp_get_config_param ${WP_DIR}wp-config.php DB_USER | sed "s/[\r\n]*$//")
+    local DB_PASS=$(wp_get_config_param ${WP_DIR}wp-config.php DB_PASSWORD | sed "s/[\r\n]*$//")
 
 	#
 	# Acquiring actual WP version to get correct test suite
@@ -997,9 +997,9 @@ command_install_wp_test_suite() {
     #
 	if [ ! -d ${WP_TESTS_DIR}includes/bootstrap.chayka.php ]; then
 	    cp ${WP_TESTS_DIR}includes/bootstrap.php ${WP_TESTS_DIR}includes/bootstrap.chayka.php
-		sed ${sedOption} "s:system:'//system':" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
-		sed ${sedOption} "s:_delete_all_posts:'//_delete_all_posts':" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
-		sed ${sedOption} "s:new WP_PHPUnit_Util_Getopt:'//new WP_PHPUnit_Util_Getopt':" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
+		sed ${sedOption} "s:system://system:" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
+		sed ${sedOption} "s:_delete_all_posts://_delete_all_posts:" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
+		sed ${sedOption} "s:new WP_PHPUnit_Util_Getopt://new WP_PHPUnit_Util_Getopt:" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
     fi
 
     #

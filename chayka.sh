@@ -833,7 +833,8 @@ command_install_wp () {
 	local domain=$1
 	local db_pass=${DB_PASS:-$(pwgen -cn 16 1)}
 	local db_name=${DB_NAME:-$(wp_db_name $domain)}
-	local db_user=${DB_USER:-$db_name:0:16}
+	local db_user=${DB_USER:-$db_name}
+	db_user=${db_user:0:16}
 	local db_host=${DB_HOST:-'localhost'}
 
     if [ -z ${domain} ]; then

@@ -1014,6 +1014,7 @@ command_install_wp_test_suite() {
 		sed ${sedOption} "s:yourpasswordhere:${DB_PASS}:" ${WP_TESTS_DIR}wp-tests-config.php
 		sed ${sedOption} "s:localhost:${DB_HOST}:" ${WP_TESTS_DIR}wp-tests-config.php
 		sed ${sedOption} "s:wptests_:${DB_PREFIX}:" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sedOption} "s:example.org:${domain}:" ${WP_TESTS_DIR}wp-tests-config.php
 	fi
 }
 

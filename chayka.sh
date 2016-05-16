@@ -997,9 +997,9 @@ command_install_wp_test_suite() {
     #
 	if [ ! -d ${WP_TESTS_DIR}includes/bootstrap.chayka.php ]; then
 	    cp ${WP_TESTS_DIR}includes/bootstrap.php ${WP_TESTS_DIR}includes/bootstrap.chayka.php
-		sed ${sedOption} "s:system:'//system':" ${WP_TESTS_DIR}wp-tests-config.php
-		sed ${sedOption} "s:_delete_all_posts:'//_delete_all_posts':" ${WP_TESTS_DIR}wp-tests-config.php
-		sed ${sedOption} "s:new WP_PHPUnit_Util_Getopt:'//new WP_PHPUnit_Util_Getopt':" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sedOption} "s:system:'//system':" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
+		sed ${sedOption} "s:_delete_all_posts:'//_delete_all_posts':" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
+		sed ${sedOption} "s:new WP_PHPUnit_Util_Getopt:'//new WP_PHPUnit_Util_Getopt':" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
     fi
 
     #

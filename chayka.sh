@@ -987,9 +987,9 @@ command_install_wp_test_suite() {
     #
 	# portable in-place argument for both GNU sed and Mac OSX sed
 	#
-    local sedOption='-i'
+    local sed_option='-i'
 	if [ $(uname -s) == 'Darwin' ]; then
-		sedOption='-i .bak'
+		sed_option='-i .bak'
 	fi
 
     #
@@ -998,9 +998,9 @@ command_install_wp_test_suite() {
     #
 	if [ ! -f ${WP_TESTS_DIR}includes/bootstrap.chayka.php ]; then
 	    cp ${WP_TESTS_DIR}includes/bootstrap.php ${WP_TESTS_DIR}includes/bootstrap.chayka.php
-		sed ${sedOption} "s:system://system:" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
-		sed ${sedOption} "s:_delete_all_posts://_delete_all_posts:" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
-		sed ${sedOption} "s:new WP_PHPUnit_Util_Getopt://new WP_PHPUnit_Util_Getopt:" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
+		sed ${sed_option} "s:system://system:" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
+		sed ${sed_option} "s:_delete_all_posts://_delete_all_posts:" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
+		sed ${sed_option} "s:new WP_PHPUnit_Util_Getopt://new WP_PHPUnit_Util_Getopt:" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
     fi
 
     #
@@ -1008,9 +1008,9 @@ command_install_wp_test_suite() {
     #
 	if [ ! -f ${WP_TESTS_DIR}includes/install.chayka.php ]; then
 	    cp ${WP_TESTS_DIR}includes/install.php ${WP_TESTS_DIR}includes/install.chayka.php
-		sed ${sedOption} 's:$wpdb->tables():$wpdb->get_col("SHOW TABLES"):' ${WP_TESTS_DIR}includes/install.chayka.php
-		sed ${sedOption} 's:$argv\[1\]:"../wp-tests-config.php":' ${WP_TESTS_DIR}includes/install.chayka.php
-		sed ${sedOption} 's:$argv\[2\]:$argv[1]:' ${WP_TESTS_DIR}includes/install.chayka.php
+		sed ${sed_option} 's:$wpdb->tables():$wpdb->get_col("SHOW TABLES"):' ${WP_TESTS_DIR}includes/install.chayka.php
+		sed ${sed_option} 's:$argv\[1\]:"../wp-tests-config.php":' ${WP_TESTS_DIR}includes/install.chayka.php
+		sed ${sed_option} 's:$argv\[2\]:$argv[1]:' ${WP_TESTS_DIR}includes/install.chayka.php
     fi
 
     #
@@ -1018,13 +1018,13 @@ command_install_wp_test_suite() {
     #
 	if [ ! -f wp-tests-config.php ]; then
 		download https://develop.svn.wordpress.org/${WP_TESTS_TAG}/wp-tests-config-sample.php ${WP_TESTS_DIR}wp-tests-config.php
-		sed ${sedOption} "s:dirname( __FILE__ ) . '/src/':'${WP_DIR}':" ${WP_TESTS_DIR}wp-tests-config.php
-		sed ${sedOption} "s:youremptytestdbnamehere:${DB_NAME}:" ${WP_TESTS_DIR}wp-tests-config.php
-		sed ${sedOption} "s:yourusernamehere:${DB_USER}:" ${WP_TESTS_DIR}wp-tests-config.php
-		sed ${sedOption} "s:yourpasswordhere:${DB_PASS}:" ${WP_TESTS_DIR}wp-tests-config.php
-		sed ${sedOption} "s:localhost:${DB_HOST}:" ${WP_TESTS_DIR}wp-tests-config.php
-		sed ${sedOption} "s:wptests_:${DB_PREFIX}:" ${WP_TESTS_DIR}wp-tests-config.php
-		sed ${sedOption} "s:example.org:${domain}:" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sed_option} "s:dirname( __FILE__ ) . '/src/':'${WP_DIR}':" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sed_option} "s:youremptytestdbnamehere:${DB_NAME}:" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sed_option} "s:yourusernamehere:${DB_USER}:" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sed_option} "s:yourpasswordhere:${DB_PASS}:" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sed_option} "s:localhost:${DB_HOST}:" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sed_option} "s:wptests_:${DB_PREFIX}:" ${WP_TESTS_DIR}wp-tests-config.php
+		sed ${sed_option} "s:example.org:${domain}:" ${WP_TESTS_DIR}wp-tests-config.php
 	fi
 }
 

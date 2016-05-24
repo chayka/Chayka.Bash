@@ -996,11 +996,22 @@ command_install_wp_test_suite() {
     # Creating alternative bootstrap, that does not flush database
     # and does not check for WordPress specific test groups
     #
-	if [ ! -d ${WP_TESTS_DIR}includes/bootstrap.chayka.php ]; then
+	if [ ! -f ${WP_TESTS_DIR}includes/bootstrap.chayka.php ]; then
 	    cp ${WP_TESTS_DIR}includes/bootstrap.php ${WP_TESTS_DIR}includes/bootstrap.chayka.php
 		sed ${sedOption} "s:system://system:" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
 		sed ${sedOption} "s:_delete_all_posts://_delete_all_posts:" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
 		sed ${sedOption} "s:new WP_PHPUnit_Util_Getopt://new WP_PHPUnit_Util_Getopt:" ${WP_TESTS_DIR}includes/bootstrap.chayka.php
+    fi
+
+    #
+    # Creating alternative install.php script that drops all the tables and uses wp-tests-config.php
+    #
+	if [ ! -f ${WP_TESTS_DIR}includes/install.chayka.php ]; then
+        'foreach($wpdb->get_col("SHOW TABLES") as $table){$wpdb->query "DROP TABLE IF EXISTS $table");}'
+	    cp ${WP_TESTS_DIR}includes/install.php ${WP_TESTS_DIR}includes/install.chayka.php
+		sed ${sedOption} 's:$wpdb->tables():$wpdb->get_col("SHOW TABLES"):' ${WP_TESTS_DIR}includes/install.chayka.php
+		sed ${sedOption} 's:$argv[1]:"../wp-tests-config.php":' ${WP_TESTS_DIR}includes/install.chayka.php
+		sed ${sedOption} 's:$argv[2]:$argv[1]:' ${WP_TESTS_DIR}includes/install.chayka.php
     fi
 
     #

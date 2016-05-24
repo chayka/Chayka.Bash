@@ -1009,8 +1009,8 @@ command_install_wp_test_suite() {
 	if [ ! -f ${WP_TESTS_DIR}includes/install.chayka.php ]; then
 	    cp ${WP_TESTS_DIR}includes/install.php ${WP_TESTS_DIR}includes/install.chayka.php
 		sed ${sedOption} 's:$wpdb->tables():$wpdb->get_col("SHOW TABLES"):' ${WP_TESTS_DIR}includes/install.chayka.php
-		sed ${sedOption} 's:$argv[1]:"../wp-tests-config.php":' ${WP_TESTS_DIR}includes/install.chayka.php
-		sed ${sedOption} 's:$argv[2]:$argv[1]:' ${WP_TESTS_DIR}includes/install.chayka.php
+		sed ${sedOption} 's:$argv\[1\]:"../wp-tests-config.php":' ${WP_TESTS_DIR}includes/install.chayka.php
+		sed ${sedOption} 's:$argv\[2\]:$argv[1]:' ${WP_TESTS_DIR}includes/install.chayka.php
     fi
 
     #

@@ -1007,7 +1007,6 @@ command_install_wp_test_suite() {
     # Creating alternative install.php script that drops all the tables and uses wp-tests-config.php
     #
 	if [ ! -f ${WP_TESTS_DIR}includes/install.chayka.php ]; then
-        'foreach($wpdb->get_col("SHOW TABLES") as $table){$wpdb->query "DROP TABLE IF EXISTS $table");}'
 	    cp ${WP_TESTS_DIR}includes/install.php ${WP_TESTS_DIR}includes/install.chayka.php
 		sed ${sedOption} 's:$wpdb->tables():$wpdb->get_col("SHOW TABLES"):' ${WP_TESTS_DIR}includes/install.chayka.php
 		sed ${sedOption} 's:$argv[1]:"../wp-tests-config.php":' ${WP_TESTS_DIR}includes/install.chayka.php

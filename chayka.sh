@@ -622,6 +622,7 @@ command_add_site() {
 		mkdir ${HTDOCS_DIR}/${domain}/backup
 		mkdir ${HTDOCS_DIR}/${domain}/certs
 		mkdir ${HTDOCS_DIR}/${domain}/htdocs
+		mkdir ${HTDOCS_DIR}/${domain}/nginx
 		ln -s /usr/share/phpmyadmin ${HTDOCS_DIR}/${domain}/htdocs/phpmyadmin
 	fi
 

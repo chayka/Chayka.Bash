@@ -1030,6 +1030,34 @@ command_install_wp_test_suite() {
 }
 
 #
+# Enable cache that is disabled by default
+# More info: https://www.digitalocean.com/community/tutorials/how-to-add-swap-on-ubuntu-14-04
+#
+command_enable_swap() {
+    local size='1G'
+    local swappiness=10
+    local pressure=50
+
+    # swap file
+    sudo fallocate -l ${size} /swapfile
+    sudo chmod 600 /swapfile
+    ls -lh /swapfile
+    sudo mkswap /swapfile
+    sudo swapon /swapfile
+    sudo swapon -s
+    free -m
+    echo "/swapfile   none    swap    sw    0   0" >> /etc/fstab
+
+    # swappiness
+    sudo sysctl vm.swappiness=${swappiness}
+    echo "vm.swappiness=${swappiness}" >> /etc/sysctl.conf
+
+    # cache pressure
+    sudo sysctl vm.vfs_cache_pressure=${pressure}
+    echo "vm.vfs_cache_pressure=${pressure}" >> /etc/sysctl.conf
+}
+
+#
 # Launch requested command
 #
 case ${COMMAND} in

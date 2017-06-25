@@ -254,7 +254,8 @@ download() {
 # sets up php environment on server
 #
 command_setup_server() {
-    apt-get update && apt-get install -my \
+    sudo add-apt-repository -y ppa:ondrej/php
+    sudo apt-get update && apt-get install -my \
         curl \
         wget \
         git \
@@ -265,15 +266,16 @@ command_setup_server() {
         mcrypt \
         nginx \
         mysql-client \
-        php5 \
-        php5-intl \
-        php5-json \
-        php5-curl \
-        php5-fpm \
-        php5-gd \
-        php5-mysql \
-        php5-mcrypt \
-        php5-cli \
+        php7.1 \
+        php7.1-cli \
+        php7.1-intl \
+        php7.1-json \
+        php7.1-curl \
+        php7.1-fpm \
+        php7.1-gd \
+        php7.1-mysql \
+        php7.1-mcrypt \
+        phpmyadmin \
         pwgen
 
     # install letsencrypt to /opt/letsencrypt
